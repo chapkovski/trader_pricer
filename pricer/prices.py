@@ -26,14 +26,14 @@ class Stock:
         self.pi = kwargs.get('pi', pi)
         self.r = kwargs.get('r', r)
 
-    def generate_prices(self, n):
+    def generate_prices(self, n, shocks):
         u = self.leverage
         r = self.r
         pi = self.pi
         sigma = self.sigma
         dt = np.float(T) / n
         S = np.zeros(n)
-        shocks = npr.randn(n + 1)
+
         S[0] = self.initial
         for t in range(1, n):
             S[t] = S[t - 1] * np.exp(
@@ -57,9 +57,12 @@ def get_prices(stocks, n):
         type of the stock (normal vs. etf) is implicitly set via leverage.
     return array of arrays of values of length n each.
     """
-    stocks_to_update = stocks.copy()
 
-    for i in stocks_to_update:
-        s = Stock(**i)
-        i['prices'] = s.generate_prices(n)
-    return stocks_to_update
+    res = []
+    for group in stocks:
+        shocks = npr.randn(n + 1)
+        for i in group:
+            s = Stock(**i)
+            i['prices'] = s.generate_prices(n, shocks)
+            res.append(i)
+    return res
